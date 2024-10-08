@@ -268,3 +268,42 @@ sparrow_mod9$results$AIC
 ggplot(sparrow_mod9$results$reals$p, aes(time, estimate, ymin=lcl, ymax=ucl, col=island)) +
   geom_errorbar(width=0) + geom_point() + ylim(0,1) +
   xlab("Timepoint") + ylab("Estimated detection probabilities")
+
+
+# 7. GOODNESS OF FIT TESTS
+
+# can test if our data violate any of the basic assumptions of the CJS model
+# using package R2ucare
+# contains functions to perform goodness-of-fit tests
+
+# reformat the data into a matrix
+sparrow_GOF <- sparrow_data_wide$ch %>%
+  strsplit('') %>%
+  sapply(`[`) %>%
+  t() %>%
+  unlist() %>%
+  as.numeric %>%
+  matrix(nrow = nrow(sparrow_data_wide))
+
+# R2ucare performs three tests
+# test 1: overall, is there evidence that animals have equal detection and survival probabilities?
+# test 2: does recapture depend on when animal was first marked?
+# test 3: does marking affect survival?
+
+# TEST ONE
+overall_CJS(sparrow_GOF, rep(1,nrow(sparrow_data_wide)))
+# fail to reject null hypothesis - no evidence for lack of fit overall
+
+# TEST TWO
+ct_test2 <- test2ct(sparrow_GOF, rep(1, nrow(sparrow_data_wide)))
+ct_test2
+cl_test2 <- test2cl(sparrow_GOF, rep(1, nrow(sparrow_data_wide)))
+cl_test2
+# again fail to reject null - no evidence of a problem
+
+# TEST THREE
+sr_test3 <- test3sr(sparrow_GOF, rep(1,nrow(sparrow_data_wide)))
+sr_test3
+sm_test3 <- test3sm(sparrow_GOF, rep(1,nrow(sparrow_data_wide)))
+sm_test3
+# fail to reject null again
