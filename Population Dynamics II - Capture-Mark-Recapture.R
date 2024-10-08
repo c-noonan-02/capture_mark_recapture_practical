@@ -150,8 +150,7 @@ sparrow_mod4$results$AIC
 # similar AIC, model 4 is not much of an improvement so survival rates don't vary
 
 
-# 5. DOES SURVIVAL PROBABILITY VARY BETWEEN THE SEXES
-
+# Do probabilities vary between sexes?
 sparrow_proc <- process.data(sparrow_data_wide)
 sparrow_matrix <- make.design.data(sparrow_proc)
 
@@ -201,6 +200,40 @@ ggplot(sparrow_mod7$results$reals$Phi, aes(island, estimate, ymin=lcl, ymax=ucl)
   geom_errorbar(width=0.2, colour = "maroon") + geom_point(colour = "maroon") + ylim(0,1) +
   xlab("Island") + ylab("Estimated survival probabilities")
 
+
+# 5. INCLUDING TIME-VARYING COVARIATES
+
+# might want to test whether survival or detection probabilities differ#
+# depending on a factor thst varies over time - e.g. weather
+
+# add variable 'cold' to the design data, then test if this affects survival
+# add new column
+sparrow_matrix$Phi$cold <- "Cold"
+# add very cold winters between capture events 2 and 3, 5 and 6, and 8 and 9
+sparrow_matrix$Phi$cold[sparrow_matrix$Phi$time==2 | sparrow_matrix$Phi$time==5 | sparrow_matrix$Phi$time==8] <- "VeryCold"
+head(sparrow_matrix$Phi)
+
+Phi.cold <- list(formula=~cold) 
+p.island <- list(formula=~island) 
+
+sparrow_mod8 <- crm(sparrow_proc, 
+            sparrow_matrix, 
+            model.parameters = list(Phi = Phi.cold, 
+                                    p = p.island), 
+            accumulate=FALSE, hessian = TRUE)
+
+sparrow_mod8$results$reals
+
+# compare AICs
+sparrow_mod5$results$AIC
+sparrow_mod8$results$AIC
+
+# plot this
+ggplot(sparrow_mod8$results$reals$Phi, aes(cold, estimate, ymin=lcl, ymax=ucl)) +
+  geom_errorbar(width=0.2, colour = "maroon") + geom_point(colour = "maroon") + ylim(0,1) +
+  xlab("Weather Conditions") + ylab("Estimated survival probabilities")
+
+# no evidence that survival depended on this made up variable
 
 
 
