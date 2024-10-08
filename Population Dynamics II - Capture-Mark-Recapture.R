@@ -236,4 +236,35 @@ ggplot(sparrow_mod8$results$reals$Phi, aes(cold, estimate, ymin=lcl, ymax=ucl)) 
 # no evidence that survival depended on this made up variable
 
 
+# 6. TIME VARYING SURVIVAL AND RECAPTURE PROBABILITIES
 
+# can test whether survival and detection probabilities varied each year
+
+sparrow_proc <- process.data(sparrow_data_wide)
+sparrow_matrix <- make.design.data(sparrow_proc)
+
+fit.models <- function() {
+  Phi.dot <- list(formula=~1) # constant survival
+  Phi.time <- list(formula=~time) # survival varies over time
+  p.island <- list(formula=~island) # detection probability differs between islands
+  p.time <- list(formula=~time) # detection probability varies over time
+  p.island.time <- list(formula=~island+time) # detection probability varies over time
+  cml <- create.model.list(c("Phi","p"))
+  results <- crm.wrapper(cml, data=sparrow_proc, ddl=sparrow_matrix,
+                         external=FALSE, accumulate=FALSE, hessian=TRUE)
+  return(results)
+}
+
+sparrow_models <- fit.models()
+sparrow_models
+
+sparrow_mod9 <- sparrow_models[[2]]
+
+sparrow_mod5$results$AIC
+sparrow_mod9$results$AIC
+
+# year explains a lot of the variation!
+
+ggplot(sparrow_mod9$results$reals$p, aes(time, estimate, ymin=lcl, ymax=ucl, col=island)) +
+  geom_errorbar(width=0) + geom_point() + ylim(0,1) +
+  xlab("Timepoint") + ylab("Estimated detection probabilities")
