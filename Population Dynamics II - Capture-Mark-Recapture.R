@@ -149,3 +149,58 @@ sparrow_mod3$results$AIC
 sparrow_mod4$results$AIC
 # similar AIC, model 4 is not much of an improvement so survival rates don't vary
 
+
+# 5. DOES SURVIVAL PROBABILITY VARY BETWEEN THE SEXES
+
+sparrow_proc <- process.data(sparrow_data_wide)
+sparrow_matrix <- make.design.data(sparrow_proc)
+
+fit.models <- function() {
+  Phi.dot <- list(formula=~1) # constant survival
+  Phi.sex <- list(formula=~sex) # survival differs between sexes
+  Phi.island <- list(formula=~island) # survival differs between islands
+  Phi.sex.island <- list(formula=~sex+island) # survival differs between sexes and islands
+  p.dot <- list(formula=~1) # constant detection
+  p.sex <- list(formula=~sex) # detection probability differs between sexes
+  p.island <- list(formula=~island) # detection probability differs between islands
+  p.sex.island <- list(formula=~sex+island) # detection probability differs between sexes and islands
+  cml <- create.model.list(c("Phi","p"))
+  results <- crm.wrapper(cml, data=sparrow_proc, ddl=sparrow_matrix,
+                         external=FALSE, accumulate=FALSE, hessian=TRUE)
+  return(results)
+}
+
+# run function
+sparrow_models <- fit.models()
+
+# display model table
+sparrow_models
+# top model (lowest AIC) includes a constant model for survival probability,
+# but with detection probabilities differing among islands. 
+# differences not meaningfully different - so accept simplest model (fewest parameters)
+
+# extract and plot the detection probabilities
+sparrow_mod5 <- sparrow_models[[2]]
+
+ggplot(sparrow_mod5$results$reals$p, aes(island, estimate, ymin=lcl, ymax=ucl)) +
+  geom_errorbar(width=0.2, colour = "maroon") + geom_point(colour = "maroon") + ylim(0,1) +
+  xlab("Island") + ylab("Estimated detection probabilities")
+
+# can also extract sex and island differences in survival and plot those to
+# confirm they aren't big differences
+
+sparrow_mod6 <- sparrow_models[[10]]
+
+ggplot(sparrow_mod6$results$reals$Phi, aes(sex, estimate, ymin=lcl, ymax=ucl)) +
+  geom_errorbar(width=0.2, colour = "maroon") + geom_point(colour = "maroon") + ylim(0,1) +
+  xlab("Sex") + ylab("Estimated survival probabilities")
+
+sparrow_mod7 <- sparrow_models[[6]]
+
+ggplot(sparrow_mod7$results$reals$Phi, aes(island, estimate, ymin=lcl, ymax=ucl)) +
+  geom_errorbar(width=0.2, colour = "maroon") + geom_point(colour = "maroon") + ylim(0,1) +
+  xlab("Island") + ylab("Estimated survival probabilities")
+
+
+
+
