@@ -95,3 +95,57 @@ sparrow_mod2$results$reals
 #           These are not realistic. Could modify the model to consider each
 #           individual's survival and/or detection probability. 
 
+
+# 4. INCLUDING STATIC COVARIATES
+
+# We can test if islands within the meta-population differ in the probability of capturing an individual
+# In the marked package we can do this in three stages: data processing, building the design matrix, and setting up / executing candidate models
+
+# look into the functions we will be using here
+?process.data
+?make.design.data
+
+# built in function for data processing
+sparrow_proc <- process.data(sparrow_data_wide)
+str(sparrow_proc)
+head(sparrow_proc[[1]])
+head(sparrow_proc$data)
+sparrow_matrix <- make.design.data(sparrow_proc) # built in function for building design matrix 
+str(sparrow_matrix)
+head(sparrow_matrix[[1]])
+head(sparrow_matrix$Phi)
+# we can then specify the model formulation for the detection probability model
+# make p dependent on island
+p_island <- list(formula=~island) 
+# run the cmr model using newly processed data, desifn matrix, and model specification
+# specify model formulation: capture probability depends on island
+sparrow_mod3 <- crm(sparrow_proc, 
+            sparrow_matrix, 
+            model.parameters = list(p = p_island), 
+            accumulate=FALSE, hessian = TRUE)
+sparrow_mod3$results$reals
+
+# question: Does it look like detection probability varies among islands? Which
+#           island has the lowest detection probability? Why might this be? How
+#           might you compare this model with our simpler model above to see if#
+#           it is a better fit?
+
+#           Comparison of AIC values. Lower = simpler
+(sparrow_mod1$results$AIC)
+(sparrow_mod3$results$AIC)
+# more complex model better fits our data here. 
+
+# task: Test whether survival probabilities differ between the islands
+island_phi <- list(formula=~island) # survival probability depends on island
+island_p <- list(formula=~island) # capture probability depends on island
+
+sparrow_mod4 <- crm(sparrow_proc, sparrow_matrix,
+                    model.parameters = list(Phi = island_phi, p = island_p),
+                    accumulate=FALSE, hessian = TRUE)
+sparrow_mod4$results$reals
+
+# compare AIC with current model
+sparrow_mod3$results$AIC
+sparrow_mod4$results$AIC
+# similar AIC, model 4 is not much of an improvement so survival rates don't vary
+
