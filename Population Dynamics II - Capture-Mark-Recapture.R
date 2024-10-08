@@ -79,3 +79,19 @@ plogis(sparrow_mod1$results$beta$Phi)
 predict(sparrow_mod1, newdata = data.frame(sex=c('Female', 'Male')), se=T)
 # but no covariates in data so new.data argument is not used
 
+
+# 3. UNEQUAL SAMPLING INTERVALS
+
+# this model assumed an equal time between each capture event
+# we can relax this assumption by including a vector of time intervals
+
+sparrow_mod2 <- crm(sparrow_data_wide, time.intervals = c(1,2,1,1,1,1,1,3,4))
+sparrow_mod2$results$reals
+
+# question: These models assumed constant survival rates and detection
+#           probabilities. Is this a realistic assumption for this system?
+#           What term might you include in the model next, and why?
+
+#           These are not realistic. Could modify the model to consider each
+#           individual's survival and/or detection probability. 
+
